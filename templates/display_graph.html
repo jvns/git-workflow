@@ -1,0 +1,34 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html lang="en">
+<head>
+    <title>Visualize your Git!</title>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        svg {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+  <div class="navbar navbar-default" role="navigation">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#">Git workflow visualization</a>
+    </div>
+    <ul class="nav navbar-nav navbar-right">
+  
+      <li><a href="http://jvns.ca">By Julia Evans</a></li>
+      <li><a href="http://twitter.com/b0rk"><img src="https://g.twimg.com/Twitter_logo_blue.png" width="20px"></a></li>
+      <li><a href="http://github.com/jvns"><img src="/static/images/GitHub-Mark-32px.png" width="20px"></a></li>
+    </ul>
+  </div>
+
+  <div class="container">
+    <div class="col-md-12">
+      {% autoescape false %}
+    {{ svg }}
+    {% endautoescape %}
+    </div>
+  </div>
+</body>
+</html>

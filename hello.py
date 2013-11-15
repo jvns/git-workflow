@@ -20,6 +20,20 @@ app.config['DEBUG'] = True
 def hello():
     return render_template('index.html')
 
+@app.route('/display/<num>')
+def display_graph(num=None):
+    cursor = g.conn.cursor()
+    #try:
+    print num
+    cursor.execute("SELECT logfile FROM log WHERE id = %s", (num,));
+    history = cursor.fetchone()[0]
+    svg = create_svg(history)
+    #except:
+    #    g.conn.rollback()
+    #    svg = "Page not found"
+    return render_template("display_graph.html", svg=svg)
+
+
 def create_svg(history):
     pair_counts, node_totals = get_statistics(StringIO(history))
     G = create_graph(pair_counts[pair_counts['count'] >= 3], node_totals)

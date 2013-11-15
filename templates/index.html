@@ -47,7 +47,7 @@
     </div>
     <div class="col-md-9">
       <h3 align="center">
-        How you use Git
+        How you use Git <span id="permalink"> </span>
       </h3>
       <div id="image"> </div>
     </div>
@@ -62,6 +62,10 @@ $('document').ready(function() {
         $.post("/graph", post_data, function(response) {
             var svg = response["graph"];
             $('#image').html(svg);
+            var id = response["id"];
+            var permalink_url = "/display/" + id;
+            var permalink = $("<a href='" + permalink_url + "'> (permalink) </a>")
+            $('#permalink').html(permalink);
         })
         event.preventDefault();
     });
