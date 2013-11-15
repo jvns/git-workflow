@@ -1,6 +1,7 @@
+DROP TABLE log;
 CREATE TABLE log (
     id SERIAL, 
     logfile TEXT, 
     date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP);
-ALTER TABLE log ADD UNIQUE (logfile); 
 ALTER TABLE log ADD PRIMARY KEY (id);
+CREATE UNIQUE INDEX logfile_unique ON log ((md5(logfile)))
