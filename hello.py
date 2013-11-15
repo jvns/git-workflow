@@ -31,10 +31,7 @@ def get_image():
     pair_counts, node_totals = get_statistics(history)
     G = create_graph(pair_counts[pair_counts['count'] >= 3], node_totals)
     response = jsonify({'graph': dot_draw(G, tmp_dir="./tmp")})
-    try:
-        write_to_db(history)
-    except:
-        pass
+    write_to_db(str(history))
     return response
 
 def write_to_db(history):
@@ -94,12 +91,8 @@ def get_statistics(text):
     pair_counts = pair_counts.sort('count', ascending=False)
     return pair_counts, node_totals
 
-if __name__ == "__main__":
-    app.run(port=5001)
-
 @app.before_request
-def before_request():
-    print "Connection!"
+def before():
     g.conn = db_connect()
 
 @app.teardown_request
@@ -121,3 +114,8 @@ def db_connect():
         port=url.port
     )
     return conn
+
+if __name__ == "__main__":
+    app.run(port=5001)
+
+
