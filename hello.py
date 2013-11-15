@@ -44,7 +44,11 @@ def create_svg(history, sparse=False):
     if sparse:
         counts = pair_counts[pair_counts['count'] >= total_count / 100]
     else:
-        counts = pair_counts[pair_counts['count'] >= 3]
+        if total_count >= 300:
+            min_count = 3
+        else:
+            min_count = 1
+        counts = pair_counts[pair_counts['count'] >= min_count]
     if len(counts) == 0:
         return
     G = create_graph(counts, node_totals)
