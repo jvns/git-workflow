@@ -2,9 +2,15 @@ from flask import Flask, render_template, jsonify, request
 import pandas as pd
 import networkx as nx
 import pygraphviz as pgv
+import json
+import tempfile
+import numpy as np
+import brewer2mpl
+from StringIO import StringIO
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
+
 
 @app.route('/')
 def hello():
@@ -12,9 +18,9 @@ def hello():
 
 @app.route('/graph', methods=["POST"])
 def get_image():
-    history = request.form["history"]
-    pair_counts = get_statistics(history)
-    G = create_graph(pair_counts[:20])
+    history = StringIO(json.loads(request.data)["history"])
+    pair_counts, node_totals = get_statistics(history)
+    G = create_graph(pair_counts[:20], node_totals)
     response = {'graph': dot_draw(G, tmp_dir="./tmp")}
     return jsonify(response)
 
@@ -29,7 +35,7 @@ def dot_draw(G, prog="circo", tmp_dir="/tmp"):
         data = f.read()
     return data.encode("base64")
 
-def getwidth(node, totals):
+def getwidth(node, node_totals):
     count = np.sqrt(node_totals[node])
     count /= float(sum(np.sqrt(node_totals)))
     count *= 20
@@ -45,7 +51,7 @@ def get_colors(nodes):
         colors[node] = set2[i % n_colors]
     return colors
 
-def create_graph(pair_counts):
+def create_graph(pair_counts, node_totals):
     G = nx.DiGraph()
     node_colors = get_colors(list(node_totals.index))
     for (frm, to), count in pair_counts.iterrows():
@@ -63,7 +69,11 @@ def get_statistics(text):
     pairs['dist'] = df.index[1:].values - df.index[:-1].values
     pairs['from'] = df['command'][:-1].values
     pairs['to'] = df['command'][1:].values
+    node_totals = df['command'].value_counts()
     close_pairs = pairs[pairs.dist == 1]
     pair_counts = close_pairs.groupby(['from', 'to']).aggregate(len).rename(columns= {'dist': 'count'})
     pair_counts = pair_counts.sort('count', ascending=False)
-    return pair_counts
+    return pair_counts, node_totals
+
+if __name__ == "__main__":
+    app.run(port=5001)
