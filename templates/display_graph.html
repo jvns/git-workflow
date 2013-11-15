@@ -31,6 +31,18 @@
 
   <div class="container">
     <div class="col-md-12">
+      <h2 align="center"> <a href="/display/{{num}}">Full version</a> | <a
+          href="/display/{{num}}/sparse">Sparse version</a></h2>
+      <div class="col-md-3"></div>
+      <div class="col-md-6">
+      <p align="center">
+      An edge from 'commit' to 'push' means that you did 'git
+      commit' right before 'git push'. 
+      Thicker edges happened more times.
+      </p> <p align="center">
+      The sparse version only has edges in the top 99% of transitions.
+      </p>
+    </div>
       {% autoescape false %}
     {{ svg }}
     {% endautoescape %}

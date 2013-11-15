@@ -21,22 +21,30 @@ def hello():
     return render_template('index.html')
 
 @app.route('/display/<num>')
-def display_graph(num=None):
+def display_graph(num=None, sparse=False):
     cursor = g.conn.cursor()
     try:
         cursor.execute("SELECT logfile FROM log WHERE id = %s", (num,));
         history = cursor.fetchone()[0]
-        svg = create_svg(history)
+        svg = create_svg(history, sparse=sparse)
         if svg is None:
             svg = "Graph is empty!"
     except:
         svg = "Sorry, there's no log file with that id."
     return render_template("display_graph.html", svg=svg, num=num)
 
+@app.route('/display/<num>/sparse')
+def display_graph_sparse(num=None):
+    return display_graph(num, True)
 
-def create_svg(history):
+def create_svg(history, sparse=False):
     pair_counts, node_totals = get_statistics(StringIO(history))
-    counts = pair_counts[pair_counts['count'] >= 3]
+    total_count = float(np.sum(pair_counts['count']))
+    # Only look at transitions that happen at least 1% of the time
+    if sparse:
+        counts = pair_counts[pair_counts['count'] >= total_count / 100]
+    else:
+        counts = pair_counts[pair_counts['count'] >= 3]
     if len(counts) == 0:
         return
     G = create_graph(counts, node_totals)
@@ -45,7 +53,8 @@ def create_svg(history):
 @app.route('/graph', methods=["POST"])
 def get_image():
     history = request.form["history"]
-    svg = create_svg(history)
+    sparse = request.form.get("sparse", False)
+    svg = create_svg(history, sparse=sparse)
     row_id  = write_to_db(history)
     response = jsonify({'graph': svg, 'id': row_id})
     return response
