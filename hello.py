@@ -90,12 +90,20 @@ def get_colors(nodes):
     return colors
 
 def create_graph(pair_counts, node_totals):
+    """
+    The graph layout options are here. If you wanted to change
+    how the graph looks, you'd change this
+    """
     G = nx.DiGraph()
     node_colors = get_colors(list(node_totals.index))
+    total_count = np.sum(pair_counts['count'])
     for (frm, to), count in pair_counts.iterrows():
-        G.add_edge(frm, to, penwidth=float(count) / 8, color=node_colors[frm])
+        G.add_edge(frm, to,
+            penwidth=float(count) / total_count * 60,
+            color=node_colors[frm])
     for node in G.nodes():
         G.node[node]['width'] = getwidth(node, node_totals)
+        G.node[node]['penwidth'] = 2
         G.node[node]['height'] = G.node[node]['width']
         G.node[node]['fontsize'] = 10
         G.node[node]['color'] = node_colors[node]
