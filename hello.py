@@ -31,7 +31,7 @@ def display_graph(num=None):
     #except:
     #    g.conn.rollback()
     #    svg = "Page not found"
-    return render_template("display_graph.html", svg=svg)
+    return render_template("display_graph.html", svg=svg, num=num)
 
 
 def create_svg(history):
