@@ -27,17 +27,21 @@ def get_image():
         os.mkdir("tmp")
     except OSError:
         pass
-    history = StringIO(request.form["history"])
-    pair_counts, node_totals = get_statistics(history)
+    history = request.form["history"]
+    pair_counts, node_totals = get_statistics(StringIO(history))
     G = create_graph(pair_counts[pair_counts['count'] >= 3], node_totals)
     response = jsonify({'graph': dot_draw(G, tmp_dir="./tmp")})
-    write_to_db(str(history))
+    try:
+        write_to_db(history)
+    except psycopg2.IntegrityError:
+        print "Not adding data -- it already exists"
     return response
 
 def write_to_db(history):
     cursor = g.conn.cursor()
     query = "INSERT INTO log (logfile) VALUES (%s);"
     cursor.execute(query, (history,))
+    g.conn.commit()
 
 def dot_draw(G, prog="dot", tmp_dir="/tmp"):
     # Hackiest code :)

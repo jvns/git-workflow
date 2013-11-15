@@ -30,6 +30,9 @@
     <div class="col-md-12">
     Run the following command and paste the results into the textarea to get a visualization of your git workflow!
     <pre> history | grep "  git " | awk '{print $1 " " $3}' | grep -v '|' > history.txt </pre>
+    The result is a graph of which commands you use after other
+    commands. For example, if you always push after committing, there
+    will be a big arrow from 'commit' to 'push'.
     </div>
   </div>
   <div class="container">
