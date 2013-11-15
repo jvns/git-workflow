@@ -14,7 +14,7 @@ app.config['DEBUG'] = True
 
 @app.route('/')
 def hello():
-    return render_template('index.html', name="Julia")
+    return render_template('index.html')
 
 @app.route('/graph', methods=["POST"])
 def get_image():

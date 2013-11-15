@@ -14,8 +14,22 @@
     </style>
 </head>
 <body>
+  <div class="navbar navbar-default" role="navigation">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#">Git workflow visualization</a>
+    </div>
+    <ul class="nav navbar-nav navbar-right">
+  
+      <li><a href="http://jvns.ca">By Julia Evans</a></li>
+      <li><a href="http://twitter.com/b0rk"><img src="https://g.twimg.com/Twitter_logo_blue.png" width="20px"></a></li>
+    </ul>
+  </div>
+
   <div class="container">
-    <h2> hey there!</h2>
+    <div class="col-md-12">
+    Run the following command and paste the results into the textarea to get a visualization of your git workflow!
+    <pre> history | grep "  git " | awk '{print $1 " " $3}' | grep -v '|' > history.txt </pre>
+    </div>
   </div>
   <div class="container">
     <div class="col-md-3">
@@ -29,7 +43,7 @@
     </div>
     <div class="col-md-9">
       <h3 align="center">
-        Your image
+        How you use Git
       </h3>
       <div id="image"> </div>
     </div>
