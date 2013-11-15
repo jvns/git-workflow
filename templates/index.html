@@ -3,23 +3,34 @@
 <head>
     <title>Visualize your Git!</title>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css" rel="stylesheet">
     <style>
         #history {
-            width: 400px;
             height: 400px;
         }
     </style>
 </head>
 <body>
-    Hey, {{ name }}!
-    <div id="left">
-    <form id="historyform">
-    <textarea name="history" id="history"></textarea>
-    <input type="submit"></input>
-    </form>
+  <div class="container">
+    <h2> hey there!</h2>
+  </div>
+  <div class="container">
+    <div class="col-md-3">
+      <h3>
+        Your history
+      </h3>
+      <form id="historyform">
+        <textarea name="history" id="history" class="form-control" rows="20"></textarea>
+        <button type="submit" class="btn btn-primary">Submit</button>
+      </form>
     </div>
-    <div id="right">
+    <div class="col-md-9">
+      <h3 align="center">
+        Your image
+      </h3>
+      <div id="image"> </div>
     </div>
+  </div>
 </body>
 <script>
 $('document').ready(function() {
@@ -29,8 +40,8 @@ $('document').ready(function() {
         console.log(post_data);
         $.post("/graph", post_data, function(response) {
             console.log(response["graph"]);
-            img = $("<img src='data:image/png;base64," + response['graph'] + "'>");
-            $('#right').html(img);
+            img = $("<img class='img-responsive' src='data:image/png;base64," + response['graph'] + "'>");
+            $('#image').html(img);
         })
         event.preventDefault();
     });
