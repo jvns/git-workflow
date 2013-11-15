@@ -20,28 +20,33 @@ app.config['DEBUG'] = True
 def hello():
     return render_template('index.html')
 
-@app.route('/graph', methods=["POST"])
-def get_image():
-    import os
-    try:
-        os.mkdir("tmp")
-    except OSError:
-        pass
-    history = request.form["history"]
+def create_svg(history):
     pair_counts, node_totals = get_statistics(StringIO(history))
     G = create_graph(pair_counts[pair_counts['count'] >= 3], node_totals)
-    response = jsonify({'graph': dot_draw(G, tmp_dir="./tmp")})
-    try:
-        write_to_db(history)
-    except psycopg2.IntegrityError:
-        print "Not adding data -- it already exists"
+    return dot_draw(G, tmp_dir="./tmp")
+
+@app.route('/graph', methods=["POST"])
+def get_image():
+    history = request.form["history"]
+    svg = create_svg(history)
+    row_id  = write_to_db(history)
+    response = jsonify({'graph': svg, 'id': row_id})
     return response
 
 def write_to_db(history):
     cursor = g.conn.cursor()
-    query = "INSERT INTO log (logfile) VALUES (%s);"
-    cursor.execute(query, (history,))
-    g.conn.commit()
+    query = "INSERT INTO log (logfile) VALUES (%s) RETURNING id;"
+    try:
+        cursor.execute(query, (history,))
+        row_id = cursor.fetchone()[0]
+        g.conn.commit()
+    except psycopg2.IntegrityError:
+        g.conn.rollback()
+        select_query = "SELECT id FROM log WHERE logfile = %s;"
+        cursor.execute(select_query, (history,))
+        row_id = cursor.fetchone()[0]
+        print "Not adding data -- it already exists"
+    return row_id
 
 def dot_draw(G, prog="dot", tmp_dir="/tmp"):
     # Hackiest code :)
@@ -97,6 +102,10 @@ def get_statistics(text):
 
 @app.before_request
 def before():
+    try:
+        os.mkdir("tmp")
+    except OSError:
+        pass
     g.conn = db_connect()
 
 @app.teardown_request
