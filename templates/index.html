@@ -2,8 +2,38 @@
 <html lang="en">
 <head>
     <title>Visualize your Git!</title>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <style>
+        #history {
+            width: 400px;
+            height: 400px;
+        }
+    </style>
 </head>
 <body>
     Hey, {{ name }}!
+    <div id="left">
+    <form id="historyform">
+    <textarea name="history" id="history"></textarea>
+    <input type="submit"></input>
+    </form>
+    </div>
+    <div id="right">
+    </div>
 </body>
+<script>
+$('document').ready(function() {
+    $('#historyform').on('submit', function(event) {
+        var history = $('#history')[0].value;
+        var post_data = {'history': history};
+        console.log(post_data);
+        $.post("/graph", post_data, function(response) {
+            console.log(response["graph"]);
+            img = $("<img src='data:image/png;base64," + response['graph'] + "'>");
+            $('#right').html(img);
+        })
+        event.preventDefault();
+    });
+});
+</script>
 </html>

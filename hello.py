@@ -18,7 +18,7 @@ def hello():
 
 @app.route('/graph', methods=["POST"])
 def get_image():
-    history = StringIO(json.loads(request.data)["history"])
+    history = StringIO(request.form["history"])
     pair_counts, node_totals = get_statistics(history)
     G = create_graph(pair_counts[:20], node_totals)
     response = {'graph': dot_draw(G, tmp_dir="./tmp")}
