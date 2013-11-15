@@ -22,7 +22,7 @@
 
   <div class="navbar navbar-default" role="navigation">
     <div class="navbar-header">
-      <a class="navbar-brand" href="#">Git workflow visualization</a>
+      <a class="navbar-brand" href="/">Git workflow visualization</a>
     </div>
     <ul class="nav navbar-nav navbar-right">
   
@@ -35,7 +35,14 @@
 
   <div class="container">
     <div class="col-md-12">
-    Run the following command and paste the results into the textarea to get a visualization of your git workflow!
+      <p>
+    Run the following command and paste the results into the textarea to
+    get a visualization of your git workflow! 
+    </p>
+    
+    <p>
+    Can't do it? See <a href="/display/2">my workflow </a>
+    </p>
     <pre> history | grep "  git " | awk '{print $1 " " $3}' | grep -v '|' > history.txt </pre>
     The result is a graph of which commands you use after other
     commands. For example, if you always push after committing, there
