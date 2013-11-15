@@ -39,9 +39,8 @@ $('document').ready(function() {
         var post_data = {'history': history};
         console.log(post_data);
         $.post("/graph", post_data, function(response) {
-            console.log(response["graph"]);
-            img = $("<img class='img-responsive' src='data:image/png;base64," + response['graph'] + "'>");
-            $('#image').html(img);
+            var svg = response["graph"];
+            $('#image').html(svg);
         })
         event.preventDefault();
     });

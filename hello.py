@@ -32,13 +32,13 @@ def get_image():
 def dot_draw(G, prog="circo", tmp_dir="/tmp"):
     # Hackiest code :)
     tmp_dot = tempfile.mktemp(dir=tmp_dir, suffix=".dot")
-    tmp_image = tempfile.mktemp(dir=tmp_dir, suffix=".png")
+    tmp_image = tempfile.mktemp(dir=tmp_dir, suffix=".svg")
     nx.write_dot(G, tmp_dot)
     dot_graph = pgv.AGraph(tmp_dot)
     dot_graph.draw(tmp_image, prog=prog)
     with open(tmp_image) as f:
         data = f.read()
-    return data.encode("base64")
+    return data
 
 def getwidth(node, node_totals):
     count = np.sqrt(node_totals[node])
