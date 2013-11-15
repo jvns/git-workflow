@@ -130,7 +130,7 @@ def teardown_request(exception):
 
 def db_connect():
     urlparse.uses_netloc.append("postgres")
-    db_url = os.environ["DATABASE_URL"]
+    db_url = os.environ["HEROKU_POSTGRESQL_CYAN_URL"]
     url = urlparse.urlparse(db_url)
 
     conn = psycopg2.connect(
