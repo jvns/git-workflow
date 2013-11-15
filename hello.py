@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, g
 import pandas as pd
 import networkx as nx
 import pygraphviz as pgv
@@ -7,6 +7,10 @@ import tempfile
 import numpy as np
 import brewer2mpl
 from StringIO import StringIO
+import psycopg2
+import urlparse
+import os
+
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
@@ -26,8 +30,17 @@ def get_image():
     history = StringIO(request.form["history"])
     pair_counts, node_totals = get_statistics(history)
     G = create_graph(pair_counts[pair_counts['count'] >= 3], node_totals)
-    response = {'graph': dot_draw(G, tmp_dir="./tmp")}
-    return jsonify(response)
+    response = jsonify({'graph': dot_draw(G, tmp_dir="./tmp")})
+    try:
+        write_to_db(history)
+    except:
+        pass
+    return response
+
+def write_to_db(history):
+    cursor = g.conn.cursor()
+    query = "INSERT INTO log (logfile) VALUES (%s);"
+    cursor.execute(query, (history,))
 
 def dot_draw(G, prog="dot", tmp_dir="/tmp"):
     # Hackiest code :)
@@ -83,3 +96,28 @@ def get_statistics(text):
 
 if __name__ == "__main__":
     app.run(port=5001)
+
+@app.before_request
+def before_request():
+    print "Connection!"
+    g.conn = db_connect()
+
+@app.teardown_request
+def teardown_request(exception):
+    db = getattr(g, 'db', None)
+    if db is not None:
+        db.close()
+
+def db_connect():
+    urlparse.uses_netloc.append("postgres")
+    db_url = os.environ["DATABASE_URL"]
+    url = urlparse.urlparse(db_url)
+
+    conn = psycopg2.connect(
+        database=url.path[1:],
+        user=url.username,
+        password=url.password,
+        host=url.hostname,
+        port=url.port
+    )
+    return conn
