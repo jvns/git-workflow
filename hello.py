@@ -25,11 +25,11 @@ def get_image():
         pass
     history = StringIO(request.form["history"])
     pair_counts, node_totals = get_statistics(history)
-    G = create_graph(pair_counts[:20], node_totals)
+    G = create_graph(pair_counts[pair_counts['count'] >= 3], node_totals)
     response = {'graph': dot_draw(G, tmp_dir="./tmp")}
     return jsonify(response)
 
-def dot_draw(G, prog="circo", tmp_dir="/tmp"):
+def dot_draw(G, prog="dot", tmp_dir="/tmp"):
     # Hackiest code :)
     tmp_dot = tempfile.mktemp(dir=tmp_dir, suffix=".dot")
     tmp_image = tempfile.mktemp(dir=tmp_dir, suffix=".svg")
@@ -43,8 +43,8 @@ def dot_draw(G, prog="circo", tmp_dir="/tmp"):
 def getwidth(node, node_totals):
     count = np.sqrt(node_totals[node])
     count /= float(sum(np.sqrt(node_totals)))
-    count *= 20
-    count = max(count, 0.3)
+    count *= 6
+    count = max(count, 0.1)
     count = min(count, 4)
     return count
 
@@ -64,6 +64,7 @@ def create_graph(pair_counts, node_totals):
     for node in G.nodes():
         G.node[node]['width'] = getwidth(node, node_totals)
         G.node[node]['height'] = G.node[node]['width']
+        G.node[node]['fontsize'] = 10
         G.node[node]['color'] = node_colors[node]
         G.node[node]['label'] = "%s (%d%%)" % (node, int(node_totals[node] / float(sum(node_totals)) * 100) )
     return G
