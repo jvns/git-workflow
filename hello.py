@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, request, g
+from flask import Flask, render_template, jsonify, request, g, abort
 import pandas as pd
 import networkx as nx
 import pygraphviz as pgv
@@ -23,20 +23,23 @@ def hello():
 @app.route('/display/<num>')
 def display_graph(num=None):
     cursor = g.conn.cursor()
-    #try:
-    print num
-    cursor.execute("SELECT logfile FROM log WHERE id = %s", (num,));
-    history = cursor.fetchone()[0]
-    svg = create_svg(history)
-    #except:
-    #    g.conn.rollback()
-    #    svg = "Page not found"
+    try:
+        cursor.execute("SELECT logfile FROM log WHERE id = %s", (num,));
+        history = cursor.fetchone()[0]
+        svg = create_svg(history)
+        if svg is None:
+            svg = "Graph is empty!"
+    except:
+        svg = "Sorry, there's no log file with that id."
     return render_template("display_graph.html", svg=svg, num=num)
 
 
 def create_svg(history):
     pair_counts, node_totals = get_statistics(StringIO(history))
-    G = create_graph(pair_counts[pair_counts['count'] >= 3], node_totals)
+    counts = pair_counts[pair_counts['count'] >= 3]
+    if len(counts) == 0:
+        return
+    G = create_graph(counts, node_totals)
     return dot_draw(G, tmp_dir="./tmp")
 
 @app.route('/graph', methods=["POST"])
