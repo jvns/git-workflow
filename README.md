@@ -13,7 +13,7 @@ Stand-alone version
 
 ```
 pip install -r requirements.local.txt
-history | pythong git-workflow.py > graph.svg
+history | python git-workflow.py > graph.svg
 ```
 
 See ``templates/index.html`` or the Website for an explanation of how it works.
