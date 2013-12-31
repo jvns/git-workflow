@@ -45,7 +45,7 @@
     <p>
     Can't do it? See <a href="/display/2">my workflow </a>
     </p>
-    <pre> history | grep "  git " | awk '{print $1 " " $3}' | grep -v '|' > history.txt </pre>
+    <pre> history | awk '$2 == "git" {print $1 " " $3}' > history.txt </pre>
     The result is a graph of which commands you use after other
     commands. For example, if you always push after committing, there
     will be a big arrow from 'commit' to 'push'.
