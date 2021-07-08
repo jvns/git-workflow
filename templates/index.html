@@ -49,6 +49,10 @@
     The result is a graph of which commands you use after other
     commands. For example, if you always push after committing, there
     will be a big arrow from 'commit' to 'push'.
+    <p>
+        For those using `fish` or other terminals that don't prefix commands
+        with a number in `history`, try this:
+    <pre> history | awk '$1 == "git" {print $2}' | grep -n "." | tr ":" " " > history.txt </pre>
     </div>
   </div>
   <div class="container">
