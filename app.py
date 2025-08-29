@@ -1,14 +1,10 @@
-from flask import Flask, render_template, jsonify, request, g, abort
+from flask import Flask, render_template, jsonify, request, g
 import pandas as pd
 import networkx as nx
-import pygraphviz as pgv
-import json
-import tempfile
+import graphviz
 import numpy as np
-import brewer2mpl
-from StringIO import StringIO
-import psycopg2
-import urlparse
+from io import StringIO
+import sqlite3
 import os
 
 
@@ -24,7 +20,7 @@ def hello():
 def display_graph(num=None, sparse=False):
     cursor = g.conn.cursor()
     try:
-        cursor.execute("SELECT logfile FROM log WHERE id = %s", (num,));
+        cursor.execute("SELECT logfile FROM log WHERE id = ?", (num,));
         history = cursor.fetchone()[0]
         svg = create_svg(history, sparse=sparse)
         if svg is None:
@@ -65,29 +61,23 @@ def get_image():
 
 def write_to_db(history):
     cursor = g.conn.cursor()
-    query = "INSERT INTO log (logfile) VALUES (%s) RETURNING id;"
+    query = "INSERT INTO log (logfile) VALUES (?) RETURNING id;"
     try:
         cursor.execute(query, (history,))
         row_id = cursor.fetchone()[0]
         g.conn.commit()
-    except psycopg2.IntegrityError:
+    except sqlite3.IntegrityError:
         g.conn.rollback()
-        select_query = "SELECT id FROM log WHERE logfile = %s;"
+        select_query = "SELECT id FROM log WHERE logfile = ?;"
         cursor.execute(select_query, (history,))
         row_id = cursor.fetchone()[0]
-        print "Not adding data -- it already exists"
+        print("Not adding data -- it already exists")
     return row_id
 
 def dot_draw(G, prog="dot", tmp_dir="/tmp"):
-    # Hackiest code :)
-    tmp_dot = tempfile.mktemp(dir=tmp_dir, suffix=".dot")
-    tmp_image = tempfile.mktemp(dir=tmp_dir, suffix=".svg")
-    nx.write_dot(G, tmp_dot)
-    dot_graph = pgv.AGraph(tmp_dot)
-    dot_graph.draw(tmp_image, prog=prog)
-    with open(tmp_image) as f:
-        data = f.read()
-    return data
+    dot_string = nx.nx_pydot.to_pydot(G).to_string()
+    dot_graph = graphviz.Source(dot_string, engine=prog)
+    return dot_graph.pipe(format='svg', encoding='utf-8')
 
 def getwidth(node, node_totals):
     count = np.sqrt(node_totals[node])
@@ -98,11 +88,11 @@ def getwidth(node, node_totals):
     return count
 
 def get_colors(nodes):
-    n_colors = 8
+    # colorbrewer Dark2 color scheme
+    color_palette = ['#1b9e77', '#d95f02', '#7570b3', '#e7298a', '#66a61e', '#e6ab02', '#a6761d', '#666666']
     colors = {}
-    set2 = brewer2mpl.get_map('Dark2', 'qualitative', n_colors).hex_colors
     for i, node in enumerate(nodes):
-        colors[node] = set2[i % n_colors]
+        colors[node] = color_palette[i % len(color_palette)]
     return colors
 
 def create_graph(pair_counts, node_totals):
@@ -113,17 +103,18 @@ def create_graph(pair_counts, node_totals):
     G = nx.DiGraph()
     node_colors = get_colors(list(node_totals.index))
     total_count = np.sum(pair_counts['count'])
-    for (frm, to), count in pair_counts.iterrows():
+    for (frm, to), row in pair_counts.iterrows():
+        count = row['count']
         G.add_edge(frm, to,
             penwidth=float(count) / total_count * 60,
             color=node_colors[frm])
     for node in G.nodes():
-        G.node[node]['width'] = getwidth(node, node_totals)
-        G.node[node]['penwidth'] = 2
-        G.node[node]['height'] = G.node[node]['width']
-        G.node[node]['fontsize'] = 10
-        G.node[node]['color'] = node_colors[node]
-        G.node[node]['label'] = "%s (%d%%)" % (node, int(node_totals[node] / float(sum(node_totals)) * 100) )
+        G.nodes[node]['width'] = getwidth(node, node_totals)
+        G.nodes[node]['penwidth'] = 2
+        G.nodes[node]['height'] = G.nodes[node]['width']
+        G.nodes[node]['fontsize'] = 10
+        G.nodes[node]['color'] = node_colors[node]
+        G.nodes[node]['label'] = "%s (%d%%)" % (node, int(node_totals[node] / float(sum(node_totals)) * 100) )
     return G
 
 def get_statistics(text):
@@ -135,7 +126,7 @@ def get_statistics(text):
     node_totals = df['command'].value_counts()
     close_pairs = pairs[pairs.dist == 1]
     pair_counts = close_pairs.groupby(['from', 'to']).aggregate(len).rename(columns= {'dist': 'count'})
-    pair_counts = pair_counts.sort('count', ascending=False)
+    pair_counts = pair_counts.sort_values('count', ascending=False)
     return pair_counts, node_totals
 
 @app.before_request
@@ -153,17 +144,9 @@ def teardown_request(exception):
         db.close()
 
 def db_connect():
-    urlparse.uses_netloc.append("postgres")
-    db_url = os.environ["HEROKU_POSTGRESQL_CYAN_URL"]
-    url = urlparse.urlparse(db_url)
-
-    conn = psycopg2.connect(
-        database=url.path[1:],
-        user=url.username,
-        password=url.password,
-        host=url.hostname,
-        port=url.port
-    )
+    db_path = os.environ.get("DATABASE_PATH", "git_workflow.db")
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
     return conn
 
 if __name__ == "__main__":
