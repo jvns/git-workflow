@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Visualize Your Git</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <h1><a href="/">Visualize Your Git</a></h1>
+            <ul>
+                <li><a href="http://jvns.ca">By Julia Evans</a></li>
+                <li><a href="http://github.com/jvns/git-workflow"><img src="/static/images/GitHub-Mark-32px.png" alt="GitHub"></a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <h2>Are these typos or aliases?</h2>
+
+        <p>
+        There are a few Git subcommands that don't appear to be valid:
+        </p>
+
+
+        <ul class="invalid">
+            {% for command in invalid_commands %}
+            <li><code>{{ command }}</code></li>
+            {% endfor %}
+        </ul>
+
+        <p>
+            Do you want to remove them from your visualization, or keep them?
+        </p>
+
+        <form action="/review/{{ log_id }}/clean" method="POST" style="display: inline;">
+            <button type="submit">Remove them</button>
+        </form>
+
+        <form action="/review/{{ log_id }}/keep" method="POST" style="display: inline;">
+            <button type="submit">Keep them</button>
+        </form>
+    </main>
+</body>
+</html>

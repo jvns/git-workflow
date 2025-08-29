@@ -149,6 +149,8 @@ button {
   box-shadow: 2px 2px black;
   border: none; outline: none;
   font-size: 1.2rem;
+  margin-right: 1rem;
+  cursor: pointer;
 }
 
 button:focus {
@@ -173,4 +175,17 @@ h2 {
 
 a {
   color: var(--link-color);
+}
+
+ul.invalid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .25rem;
+}
+
+ul.invalid li {
+  margin: .25rem;
+  padding: .25rem;
+  border-radius: 5px;
+  background-color: #eee;
 }

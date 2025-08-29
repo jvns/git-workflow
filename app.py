@@ -22,6 +22,24 @@ VALID_GIT_COMMANDS = load_valid_commands()
 def hello():
     return render_template('index.html')
 
+@app.route('/review/<log_id>')
+def review_commands(log_id):
+    cursor = g.conn.cursor()
+    cursor.execute("SELECT DISTINCT command FROM entries WHERE log_id = ? AND valid = 0", (log_id,))
+    invalid_commands = [row[0] for row in cursor.fetchall()]
+    return render_template("review_commands.html", log_id=log_id, invalid_commands=invalid_commands)
+
+@app.route('/review/<log_id>/clean', methods=["POST"])
+def clean_commands(log_id):
+    cursor = g.conn.cursor()
+    cursor.execute("DELETE FROM entries WHERE log_id = ? AND valid = 0", (log_id,))
+    g.conn.commit()
+    return redirect(url_for('display_graph', num=log_id))
+
+@app.route('/review/<log_id>/keep', methods=["POST"])
+def keep_commands(log_id):
+    return redirect(url_for('display_graph', num=log_id))
+
 @app.route('/display/<num>')
 def display_graph(num=None):
     return render_template("display_graph.html", num=num)
@@ -60,7 +78,35 @@ def create_svg(entries, sparse=False):
 def get_image():
     history = request.form["history"]
     log_id = save_history(history)
-    return redirect(url_for('display_graph', num=log_id))
+
+    # Delete invalid commands that only appear once or start with dash
+    # (probably typos or flags)
+    cursor = g.conn.cursor()
+    cursor.execute("""
+        DELETE FROM entries
+        WHERE log_id = ? AND valid = 0
+        AND (
+            command = 'git'
+            OR command LIKE '-%'
+            OR command IN (
+                SELECT command
+                FROM entries
+                WHERE log_id = ? AND valid = 0
+                GROUP BY command
+                HAVING COUNT(*) = 1
+            )
+        )
+    """, (log_id, log_id))
+    g.conn.commit()
+
+    # Check if there are still invalid commands
+    cursor.execute("SELECT COUNT(*) FROM entries WHERE log_id = ? AND valid = 0", (log_id,))
+    invalid_count = cursor.fetchone()[0]
+
+    if invalid_count > 0:
+        return redirect(url_for('review_commands', log_id=log_id))
+    else:
+        return redirect(url_for('display_graph', num=log_id))
 
 def save_history(history):
     cursor = g.conn.cursor()
