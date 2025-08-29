@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, request, g, redirect, url_for
+from flask import Flask, render_template, jsonify, request, g, redirect, url_for, Response
 import pandas as pd
 import networkx as nx
 import graphviz
@@ -17,21 +17,22 @@ def hello():
     return render_template('index.html')
 
 @app.route('/display/<num>')
-def display_graph(num=None, sparse=False):
+def display_graph(num=None):
+    return render_template("display_graph.html", num=num)
+
+@app.route('/svg/<num>')
+def serve_svg(num=None):
+    sparse = request.args.get('sparse', False)
     cursor = g.conn.cursor()
     try:
         cursor.execute("SELECT logfile FROM log WHERE id = ?", (num,));
         history = cursor.fetchone()[0]
         svg = create_svg(history, sparse=sparse)
         if svg is None:
-            svg = "Graph is empty!"
+            return "Graph is empty!", 404
+        return Response(svg, mimetype='image/svg+xml')
     except:
-        svg = "Sorry, there's no log file with that id."
-    return render_template("display_graph.html", svg=svg, num=num)
-
-@app.route('/display/<num>/sparse')
-def display_graph_sparse(num=None):
-    return display_graph(num, True)
+        return "Sorry, there's no log file with that id.", 404
 
 def create_svg(history, sparse=False):
     pair_counts, node_totals = get_statistics(StringIO(history))

@@ -1,0 +1,176 @@
+/*! minireset.css v0.0.6 | MIT License | github.com/jgthms/minireset.css */
+html,
+body,
+p,
+ol,
+ul,
+li,
+dl,
+dt,
+dd,
+blockquote,
+figure,
+fieldset,
+legend,
+textarea,
+pre,
+iframe,
+hr,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  padding: 0
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-size: 100%;
+  font-weight: normal
+}
+
+ul {
+  list-style: none
+}
+
+button,
+input,
+select {
+  margin: 0
+}
+
+html {
+  box-sizing: border-box
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit
+}
+
+img,
+video {
+  height: auto;
+  max-width: 100%
+}
+
+iframe {
+  border: 0
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0
+}
+
+td,
+th {
+  padding: 0
+}
+
+/* done with reset */
+
+:root {
+  --bg-color: #ed8936;
+  --link-color: #bd7335;
+  /* better contrast */
+}
+
+html {
+  font-family: sans-serif;
+  font-size: 18px;
+}
+
+nav {
+  padding: 1.5rem;
+  background-color: var(--bg-color);
+  display: flex;
+  justify-content: space-between;
+  color: white;
+  box-shadow: 2px 2px black;
+}
+
+nav a {
+  color: white;
+  text-decoration: none;
+}
+
+nav h1 {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+nav ul {
+  display: flex;
+  align-items: center;
+}
+
+nav img {
+  width: 1rem;
+}
+
+nav li {
+  margin: 0 .5rem;
+}
+
+main {
+  max-width: 800px;
+  margin: 2rem auto;
+}
+
+main *+* {
+  margin: 1rem 0;
+}
+
+body {
+  margin: .5rem;
+}
+
+pre {
+  background: #eee;
+  padding: .75rem;
+  border: 2px solid black;
+  white-space: pre-wrap;
+  word-break: keep-all;
+}
+
+button {
+  background-color: var(--bg-color);
+  color: white;
+  padding: .5rem 1rem;
+  box-shadow: 2px 2px black;
+  border: none; outline: none;
+  font-size: 1.2rem;
+}
+
+button:focus {
+  box-shadow: none;
+}
+
+textarea {
+  width: 100%;
+  height: 200px;
+  padding: .5rem;
+  font-family: sans-serif;
+}
+
+h2 {
+  margin-top: 2rem;
+  font-size: 1.5rem;
+}
+
+.svg {
+  text-align: center;
+}
+
+a {
+  color: var(--link-color);
+}
