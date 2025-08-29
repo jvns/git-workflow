@@ -126,7 +126,7 @@ main {
   margin: 2rem auto;
 }
 
-main *+* {
+p, .tabs, form, div, button {
   margin: 1rem 0;
 }
 
@@ -147,7 +147,8 @@ button {
   color: white;
   padding: .5rem 1rem;
   box-shadow: 2px 2px black;
-  border: none; outline: none;
+  border: none;
+  outline: none;
   font-size: 1.2rem;
   margin-right: 1rem;
   cursor: pointer;
@@ -188,4 +189,60 @@ ul.invalid li {
   padding: .25rem;
   border-radius: 5px;
   background-color: #eee;
+}
+
+/* tabs */
+/* https://dev.to/joxx/building-a-tab-component-with-pure-css-using-radio-and-label-tags-200b */
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.tabs label {
+    background: #eee;
+
+  cursor: pointer;
+  display: block;
+  font-weight: 600;
+  order: initial;
+  padding: .5rem 1rem;
+  transition: background ease 0.3s;
+  width: 100%;
+  border: 2px solid black;
+  border-bottom: 0;
+}
+
+.tabs .tab-content {
+  display: none;
+  flex-grow: 1;
+  padding: 1rem;
+  width: 100%;
+}
+
+.tabs input[type="radio"] {
+  display: none;
+}
+
+.tabs input[type="radio"]:checked+label {
+  background: var(--bg-color);
+  color: white;
+}
+
+.tabs input[type="radio"]:checked+label+.tab-content {
+  display: block;
+}
+
+.tabs .tab-content {
+  order: 99
+}
+
+.tabs label {
+  order: 1;
+}
+
+.tabs label {
+  margin-right: 0.3rem;
+  margin-top: 0;
+  width: auto;
 }

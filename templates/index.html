@@ -11,7 +11,21 @@
     script</a>.
 </p>
 
-<pre>history | awk '$2 == "git" {print $1 " " $3}' > history.txt</pre>
+<div class="tabs">
+    <input type="radio" name="tab" id="bash" checked>
+    <label for="bash">Bash</label>
+    <pre class="tab-content">history | awk '$2 == "git" {print $1 " " $3}' > history.txt</pre>
+
+    <input type="radio" name="tab" id="zsh">
+    <label for="zsh">ZSH</label>
+    <pre class="tab-content">history 0 | awk '$2 == "git" {print $1 " " $3}' > history.txt</pre>
+
+    <input type="radio" name="tab" id="fish">
+    <label for="fish">Fish</label>
+    <pre class="tab-content">history | nl -w1 -s' ' | awk '$2 == "git" {print $1 " " $3}' > history.txt</pre>
+</div>
+
+
 
 <p>
   Next, paste the results! You'll get a a graph of which commands you use
