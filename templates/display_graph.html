@@ -1,48 +1,20 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
 
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Visualize your Git! (#{{ num }})</title>
+{% block content %}
+<p>
+  An edge from 'commit' to 'push' means that you did 'git
+  commit' right before 'git push'.
+  Thicker edges happened more times.
+</p>
 
-  <link rel="stylesheet" href="/static/style.css">
-</head>
+<h2> Sparse version <small>(only has edges for the top 99% of transitions)</small></h2>
 
-<body>
-  <header>
-    <nav>
-      <h1><a href="/">Visualize Your Git!</a></h1>
-      <ul>
-        <li><a href="http://jvns.ca">By Julia Evans</a></li>
-        <li><a href="http://github.com/jvns/git-workflow"><img src="/static/images/GitHub-Mark-32px.png"
-              alt="GitHub"></a></li>
-      </ul>
-    </nav>
-  </header>
+<div class="svg">
+  <img src="/svg/{{ num }}?sparse=true">
+</div>
 
-  <main>
-    <p>
-      An edge from 'commit' to 'push' means that you did 'git
-      commit' right before 'git push'.
-      Thicker edges happened more times.
-    </p>
-
-    <p>
-    </p>
-
-    <h2> Sparse version <small>(only has edges for the top 99% of transitions)</small></h2>
-
-    <div class="svg">
-    <img src="/svg/{{ num }}?sparse=true">
-    </div>
-
-    <h2> Full version </h2>
-    <div class="svg">
-    <img src="/svg/{{ num }}">
-    </div>
-
-  </main>
-</body>
-
-</html>
+<h2> Full version </h2>
+<div class="svg">
+  <img src="/svg/{{ num }}">
+</div>
+{% endblock %}
