@@ -6,6 +6,7 @@ import numpy as np
 from io import StringIO
 import sqlite3
 import os
+from nanoid import generate
 
 
 app = Flask(__name__)
@@ -61,18 +62,19 @@ def get_image():
 
 def write_to_db(history):
     cursor = g.conn.cursor()
-    query = "INSERT INTO log (logfile) VALUES (?) RETURNING id;"
+    nanoid = generate(alphabet="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", size=10)
+    query = "INSERT INTO log (id, logfile) VALUES (?, ?);"
     try:
-        cursor.execute(query, (history,))
-        row_id = cursor.fetchone()[0]
+        cursor.execute(query, (nanoid, history))
         g.conn.commit()
+        return nanoid
     except sqlite3.IntegrityError:
         g.conn.rollback()
         select_query = "SELECT id FROM log WHERE logfile = ?;"
         cursor.execute(select_query, (history,))
         row_id = cursor.fetchone()[0]
         print("Not adding data -- it already exists")
-    return row_id
+        return row_id
 
 def dot_draw(G, prog="dot", tmp_dir="/tmp"):
     dot_string = nx.nx_pydot.to_pydot(G).to_string()

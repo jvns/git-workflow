@@ -5,3 +5,4 @@ networkx==3.5
 numpy==2.3.2
 pandas==2.3.2
 pydot==4.0.1
+nanoid==2.0.0
