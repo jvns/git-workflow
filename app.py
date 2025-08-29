@@ -12,6 +12,11 @@ from nanoid import generate
 app = Flask(__name__)
 app.config['DEBUG'] = True
 
+def load_valid_commands():
+    with open('commands.txt', 'r') as f:
+        return set(line.strip() for line in f)
+
+VALID_GIT_COMMANDS = load_valid_commands()
 
 @app.route('/')
 def hello():
@@ -25,18 +30,17 @@ def display_graph(num=None):
 def serve_svg(num=None):
     sparse = request.args.get('sparse', False)
     cursor = g.conn.cursor()
-    try:
-        cursor.execute("SELECT logfile FROM log WHERE id = ?", (num,));
-        history = cursor.fetchone()[0]
-        svg = create_svg(history, sparse=sparse)
-        if svg is None:
-            return "Graph is empty!", 404
-        return Response(svg, mimetype='image/svg+xml')
-    except:
-        return "Sorry, there's no log file with that id.", 404
+    cursor.execute("SELECT row_number, command FROM entries WHERE log_id = ? ORDER BY row_number", (num,))
+    entries = cursor.fetchall()
+    if not entries:
+        return "Graph is empty!", 404
+    svg = create_svg(entries, sparse=sparse)
+    return Response(svg, mimetype='image/svg+xml')
 
-def create_svg(history, sparse=False):
-    pair_counts, node_totals = get_statistics(StringIO(history))
+def create_svg(entries, sparse=False):
+    pair_counts, node_totals = get_statistics(entries)
+    if pair_counts.empty:
+        return None
     total_count = float(np.sum(pair_counts['count']))
     # Only look at transitions that happen at least 1% of the time
     if sparse:
@@ -55,26 +59,27 @@ def create_svg(history, sparse=False):
 @app.route('/graph', methods=["POST"])
 def get_image():
     history = request.form["history"]
-    sparse = request.form.get("sparse", False)
-    svg = create_svg(history, sparse=sparse)
-    row_id  = write_to_db(history)
-    return redirect(url_for('display_graph', num=row_id))
+    log_id = save_history(history)
+    return redirect(url_for('display_graph', num=log_id))
 
-def write_to_db(history):
+def save_history(history):
     cursor = g.conn.cursor()
-    nanoid = generate(alphabet="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", size=10)
-    query = "INSERT INTO log (id, logfile) VALUES (?, ?);"
-    try:
-        cursor.execute(query, (nanoid, history))
-        g.conn.commit()
-        return nanoid
-    except sqlite3.IntegrityError:
-        g.conn.rollback()
-        select_query = "SELECT id FROM log WHERE logfile = ?;"
-        cursor.execute(select_query, (history,))
-        row_id = cursor.fetchone()[0]
-        print("Not adding data -- it already exists")
-        return row_id
+    log_id = generate(alphabet="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", size=10)
+    cursor.execute("INSERT INTO logs (id) VALUES (?);", (log_id,))
+
+    lines = [l for l in history.split('\n') if len(l.strip()) > 0]
+    for line in lines:
+        parts = line.strip().split(' ', 1)
+        if len(parts) != 2:
+            continue
+        row_number, command = parts
+        cursor.execute(
+            "INSERT INTO entries (log_id, row_number, command, valid) VALUES (?, ?, ?, ?);",
+            (log_id, int(row_number), command, command in VALID_GIT_COMMANDS)
+        )
+
+    g.conn.commit()
+    return log_id
 
 def dot_draw(G, prog="dot", tmp_dir="/tmp"):
     dot_string = nx.nx_pydot.to_pydot(G).to_string()
@@ -119,8 +124,8 @@ def create_graph(pair_counts, node_totals):
         G.nodes[node]['label'] = "%s (%d%%)" % (node, int(node_totals[node] / float(sum(node_totals)) * 100) )
     return G
 
-def get_statistics(text):
-    df = pd.read_csv(text, sep=' ', header=None, names=["row", "command"], index_col="row")
+def get_statistics(entries):
+    df = pd.DataFrame(entries, columns=['row', 'command']).set_index('row')
     pairs = pd.DataFrame(index=range(len(df) - 1))
     pairs['dist'] = df.index[1:].values - df.index[:-1].values
     pairs['from'] = df['command'][:-1].values
