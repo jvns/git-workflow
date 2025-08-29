@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <title>Visualize your Git!</title>
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css" rel="stylesheet">
     <style>
         #history {
@@ -56,35 +55,11 @@
       <h3>
         Your history
       </h3>
-      <form id="historyform">
-        <textarea name="history" id="history" class="form-control" rows="20"></textarea>
+      <form action="/graph" method="POST">
+        <textarea name="history" class="form-control" rows="20"></textarea>
         <button type="submit" class="btn btn-primary">Submit</button>
       </form>
     </div>
-    <div class="col-md-9">
-      <h3 align="center">
-        How you use Git <span id="permalink"> </span>
-      </h3>
-      <div id="image"> </div>
-    </div>
   </div>
 </body>
-<script>
-$('document').ready(function() {
-    $('#historyform').on('submit', function(event) {
-        var history = $('#history')[0].value;
-        var post_data = {'history': history};
-        console.log(post_data);
-        $.post("/graph", post_data, function(response) {
-            var svg = response["graph"];
-            $('#image').html(svg);
-            var id = response["id"];
-            var permalink_url = "/display/" + id;
-            var permalink = $("<a href='" + permalink_url + "'> (permalink) </a>")
-            $('#permalink').html(permalink);
-        })
-        event.preventDefault();
-    });
-});
-</script>
 </html>

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, request, g
+from flask import Flask, render_template, jsonify, request, g, redirect, url_for
 import pandas as pd
 import networkx as nx
 import graphviz
@@ -56,8 +56,7 @@ def get_image():
     sparse = request.form.get("sparse", False)
     svg = create_svg(history, sparse=sparse)
     row_id  = write_to_db(history)
-    response = jsonify({'graph': svg, 'id': row_id})
-    return response
+    return redirect(url_for('display_graph', num=row_id))
 
 def write_to_db(history):
     cursor = g.conn.cursor()
