@@ -184,7 +184,8 @@ def create_graph_svg(pair_counts, node_totals):
     for (frm, to), row in pair_counts.iterrows():
         nodes.add(frm)
         nodes.add(to)
-    nodes = list(nodes)
+    # Sort to make colorscheme deterministic
+    nodes = list(sorted(nodes))
 
     node_colors = build_colorscheme(nodes)
 
