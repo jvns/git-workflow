@@ -242,10 +242,6 @@ def get_statistics(entries):
 
 @app.before_request
 def before():
-    try:
-        os.mkdir("tmp")
-    except OSError:
-        pass
     g.conn = db_connect()
 
 
