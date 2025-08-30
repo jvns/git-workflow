@@ -179,9 +179,25 @@ def create_graph_svg(pair_counts, node_totals):
     dot = graphviz.Digraph()
     dot.attr(
         rankdir="TB",
-        bgcolor="#f8fafc",
-        pad="0.5",
-        fontname="Helvetica,Arial,sans-serif",
+        bgcolor="#fef5e7",
+        pad="0.2",
+        fontname="SF Pro Text,system-ui,sans-serif",
+        fontsize="12",
+        fontcolor="#656d76",
+        label="Visualize Your Git: gitviz.jvns.ca",
+        labelloc="b",
+        labeljust="r"
+    )
+
+    # Make a subgraph for aesthetics
+    graph = graphviz.Digraph(name='cluster_main')
+    graph.attr(
+        style="filled,rounded",
+        fillcolor="white",
+        pencolor="#f6ad55",
+        penwidth="1.5",
+        margin="15",
+        label=""
     )
 
     # Extract nodes
@@ -201,21 +217,23 @@ def create_graph_svg(pair_counts, node_totals):
         size *= 6
         size = max(size, 0.1)
         size = min(size, 4)
+        width = max(size, 0.7)
 
         percentage = int(node_totals[node] / float(sum(node_totals)) * 100)
 
-        dot.node(
+        graph.node(
             node,
             shape="box",
             style="filled,rounded",
             fontname="Inconsolata, monospace",
             fillcolor=node_colors[node]["fill"],
             color=node_colors[node]["color"],
-            label=f"{node} ({percentage}%)",
-            width=str(size),
+            label=f"{node}\\n{percentage}%",
+            width=str(width),
             height=str(size),
-            fontsize="10",
+            fontsize="12",
             penwidth="1.5",
+            margin="0.15"
         )
 
     # Add edges
@@ -223,16 +241,19 @@ def create_graph_svg(pair_counts, node_totals):
     for (frm, to), row in pair_counts.iterrows():
         size = row["count"]
         penwidth = min(float(size) / total_count * 60, 10)
-        arrowsize = "1"
-        if penwidth > 5:
-            arrowsize = "0.1"
-        dot.edge(
+        arrowsize = 1.0
+        if penwidth  > 5:
+            arrowsize = 0.1
+        graph.edge(
             frm,
             to,
             penwidth=str(penwidth),
             color=node_colors[frm]["color"],
-            arrowsize=arrowsize,
+            arrowsize=str(arrowsize),
         )
+
+    # Add the cluster to the main graph
+    dot.subgraph(graph)
 
     return dot.pipe(format="svg", encoding="utf-8")
 
