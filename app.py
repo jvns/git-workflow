@@ -64,9 +64,15 @@ def display_graph(num=None):
     return render_template("display_graph.html", num=num)
 
 
-@app.route("/image/<num>")
+@app.route("/image/<num>/git-workflow.png")
 def serve_image(num=None):
-    sparse = request.args.get("sparse") is not None
+    return serve_image_inner(num)
+
+@app.route("/image/sparse/<num>/git-workflow.png")
+def serve_image_sparse(num=None):
+    return serve_image_inner(num, sparse=True)
+
+def serve_image_inner(num, sparse=False):
     cursor = g.conn.cursor()
     cursor.execute(
         "SELECT row_number, command FROM entries WHERE log_id = ? ORDER BY row_number",
@@ -165,12 +171,13 @@ def create_image_inner(pair_counts, node_totals, format="svg"):
         rankdir="TB",
         bgcolor="#fef5e7",
         pad="0.2",
-        fontname="SF Pro Text,system-ui,sans-serif",
+        fontname="Arial,Helvetica,system-ui,sans-serif",
         fontsize="12",
         fontcolor="#656d76",
         label="Visualize Your Git: gitviz.jvns.ca",
         labelloc="b",
-        labeljust="r"
+        labeljust="r",
+        dpi="200"
     )
 
     # Make a subgraph for aesthetics

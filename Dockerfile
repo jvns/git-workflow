@@ -6,7 +6,7 @@ FROM python:${PYTHON_VERSION}-slim
 
 LABEL fly_launch_runtime="flask"
 
-RUN apt-get update && apt-get install -y graphviz
+RUN apt-get update && apt-get install -y graphviz && apt-get install -y fonts-inconsolata
 
 WORKDIR /code
 
