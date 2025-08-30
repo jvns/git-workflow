@@ -66,7 +66,7 @@ def display_graph(num=None):
 
 @app.route("/svg/<num>")
 def serve_svg(num=None):
-    sparse = request.args.get("sparse", False)
+    sparse = request.args.get("sparse") is not None
     cursor = g.conn.cursor()
     cursor.execute(
         "SELECT row_number, command FROM entries WHERE log_id = ? ORDER BY row_number",
