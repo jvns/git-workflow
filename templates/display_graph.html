@@ -1,10 +1,7 @@
 {% extends "base.html" %}
 
 {% block meta %}
-<meta property="og:image" content="{{ request.url_root }}svg/{{ num }}?sparse">
-<meta property="og:image:type" content="image/svg+xml">
-<meta property="twitter:card" content="summary_large_image">
-<meta property="twitter:image" content="{{ request.url_root }}svg/{{ num }}?sparse">
+<meta property="og:image" content="https://gitviz.jvns.ca{{ url_for('serve_image_sparse', num=num) }}">
 {% endblock %}
 
 {% block content %}
