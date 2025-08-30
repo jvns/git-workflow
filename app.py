@@ -9,7 +9,6 @@ from flask import (
     Response,
 )
 import pandas as pd
-import networkx as nx
 import graphviz
 import numpy as np
 from io import StringIO
@@ -86,18 +85,15 @@ def create_svg(entries, sparse=False):
         return None
     total_count = float(np.sum(pair_counts["count"]))
     # Only look at transitions that happen at least 1% of the time
+    min_count = 1
     if sparse:
-        counts = pair_counts[pair_counts["count"] >= total_count / 100]
-    else:
-        if total_count >= 300:
-            min_count = 3
-        else:
-            min_count = 1
-        counts = pair_counts[pair_counts["count"] >= min_count]
+        min_count = total_count / 100
+    elif total_count >= 1000:
+        min_count = 5
+    counts = pair_counts[pair_counts["count"] >= min_count]
     if len(counts) == 0:
         return
-    G = create_graph(counts, node_totals)
-    return dot_draw(G, tmp_dir="./tmp")
+    return create_graph_svg(counts, node_totals)
 
 
 @app.route("/graph", methods=["POST"])
@@ -163,22 +159,7 @@ def save_history(history):
     return log_id
 
 
-def dot_draw(G, prog="dot", tmp_dir="/tmp"):
-    dot_string = nx.nx_pydot.to_pydot(G).to_string()
-    dot_graph = graphviz.Source(dot_string, engine=prog)
-    return dot_graph.pipe(format="svg", encoding="utf-8")
-
-
-def getwidth(node, node_totals):
-    count = np.sqrt(node_totals[node])
-    count /= float(sum(np.sqrt(node_totals)))
-    count *= 6
-    count = max(count, 0.1)
-    count = min(count, 4)
-    return count
-
-
-def get_colors(nodes):
+def build_colorscheme(nodes):
     # colorbrewer Dark2 color scheme
     color_palette = [
         "#1b9e77",
@@ -190,36 +171,56 @@ def get_colors(nodes):
         "#a6761d",
         "#666666",
     ]
-    colors = {}
-    for i, node in enumerate(nodes):
-        colors[node] = color_palette[i % len(color_palette)]
-    return colors
+    return {node: color_palette[i % len(color_palette)] for i, node in enumerate(nodes)}
 
 
-def create_graph(pair_counts, node_totals):
-    """
-    The graph layout options are here. If you wanted to change
-    how the graph looks, you'd change this
-    """
-    G = nx.DiGraph()
-    node_colors = get_colors(list(node_totals.index))
+def create_graph_svg(pair_counts, node_totals):
+
+    dot = graphviz.Digraph()
+    dot.attr(rankdir="TB")
+
+    # Extract nodes
+    nodes = set()
+    for (frm, to), row in pair_counts.iterrows():
+        nodes.add(frm)
+        nodes.add(to)
+    nodes = list(nodes)
+
+    node_colors = build_colorscheme(nodes)
+
+    # Add nodes
+    for node in nodes:
+        size = np.sqrt(node_totals[node])
+        size /= float(sum(np.sqrt(node_totals)))
+        size *= 6
+        size = max(size, 0.1)
+        size = min(size, 4)
+
+        percentage = int(node_totals[node] / float(sum(node_totals)) * 100)
+
+        dot.node(
+            node,
+            label=f"{node} ({percentage}%)",
+            color=node_colors[node],
+            width=str(size),
+            height=str(size),
+            fontsize="10",
+            penwidth="2",
+        )
+
+    # Add edges
     total_count = np.sum(pair_counts["count"])
     for (frm, to), row in pair_counts.iterrows():
-        count = row["count"]
-        G.add_edge(
-            frm, to, penwidth=float(count) / total_count * 60, color=node_colors[frm]
+        size = row["count"]
+        penwidth = min(float(size) / total_count * 60, 10)
+        arrowsize = "1"
+        if penwidth > 5:
+            arrowsize = "0.1"
+        dot.edge(
+            frm, to, penwidth=str(penwidth), color=node_colors[frm], arrowsize=arrowsize
         )
-    for node in G.nodes():
-        G.nodes[node]["width"] = getwidth(node, node_totals)
-        G.nodes[node]["penwidth"] = 2
-        G.nodes[node]["height"] = G.nodes[node]["width"]
-        G.nodes[node]["fontsize"] = 10
-        G.nodes[node]["color"] = node_colors[node]
-        G.nodes[node]["label"] = "%s (%d%%)" % (
-            node,
-            int(node_totals[node] / float(sum(node_totals)) * 100),
-        )
-    return G
+
+    return dot.pipe(format="svg", encoding="utf-8")
 
 
 def get_statistics(entries):
