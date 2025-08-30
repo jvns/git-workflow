@@ -3,10 +3,12 @@
 {% block content %}
 <p>
   An arrow from 'commit' to 'push' means that you did 'git commit' right before
-  'git push'. Thicker edges happened more times.
+  'git push'. Thicker arrows happened more times.
 </p>
 
-<h2> Sparse version <small>(only has edges for the top 99% of transitions)</small></h2>
+<h2>
+  Sparse version <small>(only has the most used arrows)</small>
+</h2>
 
 <div class="svg">
   <img src="/svg/{{ num }}?sparse">
