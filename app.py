@@ -160,16 +160,16 @@ def save_history(history):
 
 
 def build_colorscheme(nodes):
-    # colorbrewer Dark2 color scheme
+    # colorbrewer Dark2 color scheme + lighter fill colours
     color_palette = [
-        "#1b9e77",
-        "#d95f02",
-        "#7570b3",
-        "#e7298a",
-        "#66a61e",
-        "#e6ab02",
-        "#a6761d",
-        "#666666",
+        {"color": "#3b82f6", "fill": "#eff6ff"},
+        {"color": "#f59e0b", "fill": "#fffbeb"},
+        {"color": "#ec4899", "fill": "#fdf2f8"},
+        {"color": "#8b5cf6", "fill": "#f5f3ff"},
+        {"color": "#10b981", "fill": "#f0fdf4"},
+        {"color": "#f97316", "fill": "#fff7ed"},
+        {"color": "#64748b", "fill": "#f8fafc"},
+        {"color": "#ef4444", "fill": "#fef2f2"},
     ]
     return {node: color_palette[i % len(color_palette)] for i, node in enumerate(nodes)}
 
@@ -177,7 +177,12 @@ def build_colorscheme(nodes):
 def create_graph_svg(pair_counts, node_totals):
 
     dot = graphviz.Digraph()
-    dot.attr(rankdir="TB")
+    dot.attr(
+        rankdir="TB",
+        bgcolor="#f8fafc",
+        pad="0.5",
+        fontname="Helvetica,Arial,sans-serif",
+    )
 
     # Extract nodes
     nodes = set()
@@ -201,12 +206,16 @@ def create_graph_svg(pair_counts, node_totals):
 
         dot.node(
             node,
+            shape="box",
+            style="filled,rounded",
+            fontname="Inconsolata, monospace",
+            fillcolor=node_colors[node]["fill"],
+            color=node_colors[node]["color"],
             label=f"{node} ({percentage}%)",
-            color=node_colors[node],
             width=str(size),
             height=str(size),
             fontsize="10",
-            penwidth="2",
+            penwidth="1.5",
         )
 
     # Add edges
@@ -218,7 +227,11 @@ def create_graph_svg(pair_counts, node_totals):
         if penwidth > 5:
             arrowsize = "0.1"
         dot.edge(
-            frm, to, penwidth=str(penwidth), color=node_colors[frm], arrowsize=arrowsize
+            frm,
+            to,
+            penwidth=str(penwidth),
+            color=node_colors[frm]["color"],
+            arrowsize=arrowsize,
         )
 
     return dot.pipe(format="svg", encoding="utf-8")
