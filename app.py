@@ -64,8 +64,8 @@ def display_graph(num=None):
     return render_template("display_graph.html", num=num)
 
 
-@app.route("/svg/<num>")
-def serve_svg(num=None):
+@app.route("/image/<num>")
+def serve_image(num=None):
     sparse = request.args.get("sparse") is not None
     cursor = g.conn.cursor()
     cursor.execute(
@@ -75,26 +75,8 @@ def serve_svg(num=None):
     entries = cursor.fetchall()
     if not entries:
         return "Graph is empty!", 404
-    svg = create_svg(entries, sparse=sparse)
-    return Response(svg, mimetype="image/svg+xml")
-
-
-def create_svg(entries, sparse=False):
-    pair_counts, node_totals = get_statistics(entries)
-    if pair_counts.empty:
-        return None
-    total_count = float(np.sum(pair_counts["count"]))
-    # Only look at transitions that happen at least 1% of the time
-    min_count = 1
-    if sparse:
-        min_count = total_count / 100
-    elif total_count >= 1000:
-        min_count = 5
-    counts = pair_counts[pair_counts["count"] >= min_count]
-    if len(counts) == 0:
-        return
-    return create_graph_svg(counts, node_totals)
-
+    image = create_image(entries, format='png', sparse=sparse)
+    return Response(image, mimetype="image/png")
 
 @app.route("/graph", methods=["POST"])
 def get_image():
@@ -173,9 +155,11 @@ def build_colorscheme(nodes):
     ]
     return {node: color_palette[i % len(color_palette)] for i, node in enumerate(nodes)}
 
+def create_image(entries, format, sparse):
+    pair_counts, node_totals = get_statistics(entries, sparse)
+    return create_image_inner(pair_counts, node_totals, format)
 
-def create_graph_svg(pair_counts, node_totals):
-
+def create_image_inner(pair_counts, node_totals, format="svg"):
     dot = graphviz.Digraph()
     dot.attr(
         rankdir="TB",
@@ -255,10 +239,10 @@ def create_graph_svg(pair_counts, node_totals):
     # Add the cluster to the main graph
     dot.subgraph(graph)
 
-    return dot.pipe(format="svg", encoding="utf-8")
+    return dot.pipe(format=format, encoding="utf-8" if format == "svg" else None)
 
 
-def get_statistics(entries):
+def get_statistics(entries, sparse=False):
     df = pd.DataFrame(entries, columns=["row", "command"]).set_index("row")
     pairs = pd.DataFrame(index=range(len(df) - 1))
     pairs["dist"] = df.index[1:].values - df.index[:-1].values
@@ -271,7 +255,19 @@ def get_statistics(entries):
         .aggregate(len)
         .rename(columns={"dist": "count"})
     )
+
     pair_counts = pair_counts.sort_values("count", ascending=False)
+    total_count = float(np.sum(pair_counts["count"]))
+
+    # In sparse mode, only include transitions that happen at
+    # least 1% of the time
+    min_count = 1
+    if sparse:
+        min_count = total_count / 100
+    elif total_count >= 1000:
+        min_count = 5
+    pair_counts = pair_counts[pair_counts["count"] >= min_count]
+
     return pair_counts, node_totals
 
 
