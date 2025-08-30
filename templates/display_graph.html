@@ -1,7 +1,9 @@
 {% extends "base.html" %}
 
 {% block meta %}
-<meta property="og:image" content="https://gitviz.jvns.ca{{ url_for('serve_image_sparse', num=num) }}">
+    <meta property="og:image" content="https://gitviz.jvns.ca{{ url_for('serve_image_sparse', num=num) }}">
+    <meta property="og:type" content="website">
+    <meta property="og:description" content="A visualization of you use Git">
 {% endblock %}
 
 {% block content %}
